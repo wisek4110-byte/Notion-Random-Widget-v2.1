@@ -4,114 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘의 말씀 위젯</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 디자인 설정 */
-        body, html {
-            margin: 0; padding: 0; height: 100%; overflow: hidden;
-            font-family: 'Nanum Myeongjo', serif;
+        :root {
+            --title-size: 24px;
+            --text-size: 16px;
         }
 
-        /* 배경 이미지 설정 */
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            background-color: black;
+        }
+
+        /* 배경 이미지 설정 (페이드 효과) */
         #bg-image {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            transition: background-image 0.8s ease-in-out; /* 이미지 바뀔 때 부드럽게 */
             z-index: -1;
+            transition: opacity 0.8s ease-in-out;
+            opacity: 0;
         }
 
-        /* 어두운 오버레이 (글자를 잘 보이게 함) */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); /* 이미지 위를 살짝 어둡게 */
+            background: rgba(0, 0, 0, 0.4);
             z-index: 0;
         }
 
-        /* 중앙 카드 레이아웃 */
+        /* 중앙 컨텐츠 영역 (페이드 효과) */
         .container {
             position: relative; z-index: 1;
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; height: 100vh; text-align: center; color: white;
             padding: 0 20px;
+            transition: opacity 0.6s ease-in-out;
+            opacity: 0;
         }
+
+        /* 폰트 스타일 클래스 */
+        .font-sans { font-family: 'Noto Sans KR', sans-serif; }
+        .font-serif { font-family: 'Nanum Myeongjo', serif; }
 
         .verse-box {
-            max-width: 600px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            max-width: 600px; text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+            margin-bottom: 30px;
         }
 
-        .text {
-            font-size: 1.5rem; line-height: 1.8; margin-bottom: 20px;
+        #verse {
+            font-size: var(--title-size);
+            line-height: 1.6; margin-bottom: 15px;
             word-break: keep-all; font-weight: 700;
         }
 
-        .ref {
-            font-size: 1.1rem; opacity: 0.8; margin-bottom: 40px;
+        #ref {
+            font-size: var(--text-size);
+            opacity: 0.8;
         }
 
-        /* 버튼 디자인 */
+        /* 버튼 및 아이콘 */
+        .controls { position: fixed; bottom: 20px; display: flex; gap: 10px; z-index: 10; }
+        
         button {
             background: rgba(255, 255, 255, 0.2);
-            color: white; border: 1px solid white; padding: 12px 25px;
-            border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px);
-            transition: 0.3s; font-size: 1rem;
+            color: white; border: 1px solid white; padding: 10px 20px;
+            border-radius: 20px; cursor: pointer; backdrop-filter: blur(5px);
+            transition: 0.3s; font-size: 0.9rem;
         }
+        button:hover { background: white; color: black; }
 
-        button:hover {
-            background: white; color: black;
+        /* 설정 패널 디자인 */
+        #settings-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95); color: #333;
+            padding: 25px; border-radius: 15px; z-index: 100;
+            display: none; width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-family: sans-serif;
         }
+        .setting-item { margin-bottom: 20px; }
+        .setting-item label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #666; }
+        .setting-item input[type="range"] { width: 100%; }
+        .font-toggle { display: flex; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; }
+        .font-toggle button { 
+            flex: 1; border: none; border-radius: 0; background: white; color: #333; font-size: 12px; padding: 8px;
+        }
+        .font-toggle button.active { background: #333; color: white; }
     </style>
 </head>
-<body>
+<body class="font-sans">
 
     <div id="bg-image"></div>
     <div class="overlay"></div>
 
-    <div class="container">
+    <div id="main-container" class="container">
         <div class="verse-box">
-            <div id="verse" class="text">화면을 눌러 말씀을 확인하세요.</div>
-            <div id="ref" class="ref"></div>
+            <div id="verse"></div>
+            <div id="ref"></div>
         </div>
+    </div>
+
+    <div class="controls">
         <button onclick="draw()">말씀 뽑기</button>
+        <button onclick="toggleSettings()">설정</button>
+    </div>
+
+    <div id="settings-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0; font-size:16px;">위젯 설정</h3>
+            <span style="cursor:pointer; font-size:20px;" onclick="toggleSettings()">&times;</span>
+        </div>
+        
+        <div class="setting-item">
+            <label>폰트 스타일</label>
+            <div class="font-toggle">
+                <button id="btn-sans" class="active" onclick="setFont('sans')">고딕</button>
+                <button id="btn-serif" onclick="setFont('serif')">명조</button>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <label>제목 크기 (<span id="title-val">24</span>px)</label>
+            <input type="range" min="16" max="40" value="24" oninput="updateSize('title', this.value)">
+        </div>
+
+        <div class="setting-item">
+            <label>본문 크기 (<span id="text-val">16</span>px)</label>
+            <input type="range" min="12" max="24" value="16" oninput="updateSize('text', this.value)">
+        </div>
     </div>
 
     <script>
-        // ✨ 여기에 말씀과 이미지 주소를 넣으세요!
-        // image: '이미지주소' (직접 찍은 사진은 깃허브에 올린 후 그 주소를 쓰세요)
         const bibleData = [
-            
             { 
                 text: "여호와는 나의 목자시니 내게 부족함이 없으리로다", 
                 ref: "시편 23편 1절",
-                image: "https://images.unsplash.com/photo-1564314020584-493ec1b9fdb6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                image: "https://images.unsplash.com/photo-1564314020584-493ec1b9fdb6?q=80&w=1200&auto=format&fit=crop"
             },
             { 
                 text: "두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라", 
                 ref: "이사야 41장 10절",
-                image: "https://images.unsplash.com/photo-1535615615570-3b839f4359be?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                image: "https://images.unsplash.com/photo-1535615615570-3b839f4359be?q=80&w=1200&auto=format&fit=crop"
             },
             { 
                 text: "너의 하나님 여호와가 너의 가운데에 계시니 그는 구원을 베푸실 전능자이시라 그가 너로 말미암아 기쁨을 이기지 못하시며 너를 잠잠히 사랑하시며 너로 말미암아 즐거이 부르며 기뻐하시리라 하리라", 
                 ref: "스바냐 3장 17절",
-                image: "https://images.unsplash.com/photo-1558979142-19e920d27587?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                image: "https://images.unsplash.com/photo-1558979142-19e920d27587?q=80&w=1200&auto=format&fit=crop"
             },
-          { 
-                text: "사랑하는 자여 네 영혼이 잘됨 같이 네가 범사에 잘되고 강건하기를 내가 간구하노라", 
+            { 
+                text: "사랑하는 자여 네 영혼이 잘됨 같이 네가 범사에 잘되고 강건하기를 내가 간구하노라", 
                 ref: "요한삼서 1장 2절",
-                image: "https://images.unsplash.com/photo-1544911845-1f34a3eb46b1?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                image: "https://images.unsplash.com/photo-1544911845-1f34a3eb46b1?q=80&w=1200&auto=format&fit=crop"
             }
         ];
 
         function draw() {
-            // 랜덤으로 하나 선택
-            const randomIdx = Math.floor(Math.random() * bibleData.length);
-            const selected = bibleData[randomIdx];
+            const container = document.getElementById('main-container');
+            const bg = document.getElementById('bg-image');
+            
+            // 1. 화면 서서히 어둡게 (Fade-out)
+            container.style.opacity = 0;
+            bg.style.opacity = 0;
 
-            // 화면에 적용
-            document.getElementById('bg-image').style.backgroundImage = `url('${selected.image}')`;
-            document.getElementById('verse').innerText = `"${selected.text}"`;
-            document.getElementById('ref').innerText = selected.ref;
+            setTimeout(() => {
+                const selected = bibleData[Math.floor(Math.random() * bibleData.length)];
+
+                // 2. 내용 교체
+                bg.style.backgroundImage = `url('${selected.image}')`;
+                document.getElementById('verse').innerText = `"${selected.text}"`;
+                document.getElementById('ref').innerText = selected.ref;
+
+                // 3. 화면 서서히 밝아지기 (Fade-in)
+                container.style.opacity = 1;
+                bg.style.opacity = 1;
+            }, 600); // 어두워지는 시간 대기
         }
 
-        // 처음에 페이지 열렸을 때 바로 하나 띄우기
+        // 설정 패널 토글
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // 폰트 변경
+        function setFont(type) {
+            const main = document.getElementById('main-container');
+            if (type === 'serif') {
+                main.className = 'container font-serif';
+                document.getElementById('btn-serif').className = 'active';
+                document.getElementById('btn-sans').className = '';
+            } else {
+                main.className = 'container font-sans';
+                document.getElementById('btn-sans').className = 'active';
+                document.getElementById('btn-serif').className = '';
+            }
+        }
+
+        // 크기 조절
+        function updateSize(type, val) {
+            document.documentElement.style.setProperty(`--${type}-size`, val + 'px');
+            document.getElementById(`${type}-val`).innerText = val;
+        }
+
         window.onload = draw;
     </script>
 </body>
