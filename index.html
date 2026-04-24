@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 말씀 위젯</title>
+    <style>
+        /* 디자인 설정 */
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            font-family: 'Nanum Myeongjo', serif;
+        }
+
+        /* 배경 이미지 설정 */
+        #bg-image {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            transition: background-image 0.8s ease-in-out; /* 이미지 바뀔 때 부드럽게 */
+            z-index: -1;
+        }
+
+        /* 어두운 오버레이 (글자를 잘 보이게 함) */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); /* 이미지 위를 살짝 어둡게 */
+            z-index: 0;
+        }
+
+        /* 중앙 카드 레이아웃 */
+        .container {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; height: 100vh; text-align: center; color: white;
+            padding: 0 20px;
+        }
+
+        .verse-box {
+            max-width: 600px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .text {
+            font-size: 1.5rem; line-height: 1.8; margin-bottom: 20px;
+            word-break: keep-all; font-weight: 700;
+        }
+
+        .ref {
+            font-size: 1.1rem; opacity: 0.8; margin-bottom: 40px;
+        }
+
+        /* 버튼 디자인 */
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white; border: 1px solid white; padding: 12px 25px;
+            border-radius: 30px; cursor: pointer; backdrop-filter: blur(5px);
+            transition: 0.3s; font-size: 1rem;
+        }
+
+        button:hover {
+            background: white; color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-image"></div>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="verse-box">
+            <div id="verse" class="text">화면을 눌러 말씀을 확인하세요.</div>
+            <div id="ref" class="ref"></div>
+        </div>
+        <button onclick="draw()">말씀 뽑기</button>
+    </div>
+
+    <script>
+        // ✨ 여기에 말씀과 이미지 주소를 넣으세요!
+        // image: '이미지주소' (직접 찍은 사진은 깃허브에 올린 후 그 주소를 쓰세요)
+        const bibleData = [
+            
+            { 
+                text: "여호와는 나의 목자시니 내게 부족함이 없으리로다", 
+                ref: "시편 23편 1절",
+                image: "https://images.unsplash.com/photo-1564314020584-493ec1b9fdb6?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            },
+            { 
+                text: "두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라", 
+                ref: "이사야 41장 10절",
+                image: "https://images.unsplash.com/photo-1535615615570-3b839f4359be?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            },
+            { 
+                text: "너의 하나님 여호와가 너의 가운데에 계시니 그는 구원을 베푸실 전능자이시라 그가 너로 말미암아 기쁨을 이기지 못하시며 너를 잠잠히 사랑하시며 너로 말미암아 즐거이 부르며 기뻐하시리라 하리라", 
+                ref: "스바냐 3장 17절",
+                image: "https://images.unsplash.com/photo-1558979142-19e920d27587?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            },
+          { 
+                text: "사랑하는 자여 네 영혼이 잘됨 같이 네가 범사에 잘되고 강건하기를 내가 간구하노라", 
+                ref: "요한삼서 1장 2절",
+                image: "https://images.unsplash.com/photo-1544911845-1f34a3eb46b1?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            }
+        ];
+
+        function draw() {
+            // 랜덤으로 하나 선택
+            const randomIdx = Math.floor(Math.random() * bibleData.length);
+            const selected = bibleData[randomIdx];
+
+            // 화면에 적용
+            document.getElementById('bg-image').style.backgroundImage = `url('${selected.image}')`;
+            document.getElementById('verse').innerText = `"${selected.text}"`;
+            document.getElementById('ref').innerText = selected.ref;
+        }
+
+        // 처음에 페이지 열렸을 때 바로 하나 띄우기
+        window.onload = draw;
+    </script>
+</body>
+</html>
