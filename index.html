@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>말씀 위젯 V4</title>
+    <title>말씀 위젯 V5 (저장기능 포함)</title>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -15,10 +15,9 @@
         body, html {
             margin: 0; padding: 0; height: 100%; 
             display: flex; justify-content: center; align-items: center;
-            background-color: transparent; /* 노션 배경에 맞춤 */
+            background-color: transparent;
         }
 
-        /* 350px 정사각형 위젯 본체 */
         #widget-container {
             width: 350px; height: 350px;
             position: relative; overflow: hidden;
@@ -27,7 +26,6 @@
             background-color: #000;
         }
 
-        /* 배경 이미지 */
         #bg-image {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
@@ -37,10 +35,9 @@
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); z-index: 2;
+            background: rgba(0, 0, 0, 0.45); z-index: 2;
         }
 
-        /* 중앙 컨텐츠 */
         #content-area {
             position: absolute; inset: 0; z-index: 3;
             display: flex; flex-direction: column; justify-content: center;
@@ -54,15 +51,15 @@
         #verse {
             font-size: var(--title-size); line-height: 1.6;
             margin-bottom: 15px; font-weight: 700; word-break: keep-all;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
 
         #ref {
             font-size: var(--text-size); opacity: 0.8;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.7);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
         }
 
-        /* 우측 상단 컨트롤 버튼 */
+        /* 우측 상단 컨트롤 */
         .controls {
             position: absolute; top: 15px; right: 15px;
             display: flex; gap: 8px; z-index: 10;
@@ -70,25 +67,20 @@
 
         .icon-btn {
             background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3);
             color: white; width: 36px; height: 36px; border-radius: 10px;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; transition: 0.3s;
         }
         .icon-btn:hover { background: rgba(255, 255, 255, 0.4); }
-        .icon-btn i { width: 18px; height: 18px; }
 
-        /* 회전 애니메이션 */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .rotating { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .rotating { animation: spin 0.8s linear infinite; }
 
-        /* 위젯 내부에 딱 맞는 설정 패널 */
+        /* 내부 설정 패널 */
         #settings-panel {
             position: absolute; inset: 0;
-            background: rgba(255, 255, 255, 0.9); /* 흰색 오퍼시티 */
+            background: rgba(255, 255, 255, 0.92); /* 흰색 반투명 */
             z-index: 100; display: none;
             padding: 30px; box-sizing: border-box;
             flex-direction: column; justify-content: center;
@@ -96,13 +88,13 @@
         }
 
         .setting-item { margin-bottom: 20px; }
-        .setting-item label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #666; text-transform: uppercase; }
+        .setting-item label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #555; }
         .setting-item input[type="range"] { width: 100%; cursor: pointer; }
         
-        .tab-group { display: flex; background: #eee; border-radius: 8px; padding: 3px; }
+        .tab-group { display: flex; background: #ddd; border-radius: 8px; padding: 3px; }
         .tab-group button { 
             flex: 1; border: none; background: none; padding: 6px; 
-            font-size: 11px; cursor: pointer; border-radius: 6px;
+            font-size: 11px; cursor: pointer; border-radius: 6px; transition: 0.2s;
         }
         .tab-group button.active { background: white; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
@@ -114,11 +106,11 @@
         <div class="overlay"></div>
 
         <div class="controls">
-            <div class="icon-btn" onclick="startShuffle()" title="Reflection">
-                <i id="refresh-icon" data-lucide="refresh-cw"></i>
+            <div class="icon-btn" onclick="startShuffle()">
+                <i id="refresh-icon" data-lucide="refresh-cw" style="width:18px;"></i>
             </div>
-            <div class="icon-btn" onclick="toggleSettings()" title="Settings">
-                <i data-lucide="settings"></i>
+            <div class="icon-btn" onclick="toggleSettings()">
+                <i data-lucide="settings" style="width:18px;"></i>
             </div>
         </div>
 
@@ -128,57 +120,68 @@
         </div>
 
         <div id="settings-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; font-size:16px; color:#333;">위젯 설정</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <h3 style="margin:0; font-size:16px;">위젯 설정</h3>
                 <div style="cursor:pointer;" onclick="toggleSettings()"><i data-lucide="x" style="width:20px; color:#999;"></i></div>
             </div>
             
             <div class="setting-item">
                 <label>폰트 스타일</label>
                 <div class="tab-group">
-                    <button id="btn-sans" onclick="setFont('sans')">고딕</button>
-                    <button id="btn-serif" class="active" onclick="setFont('serif')">명조</button>
+                    <button id="btn-sans" onclick="updateFont('sans')">고딕</button>
+                    <button id="btn-serif" class="active" onclick="updateFont('serif')">명조</button>
                 </div>
             </div>
 
             <div class="setting-item">
                 <label>제목 크기 (<span id="title-val">20</span>px)</label>
-                <input type="range" min="14" max="32" value="20" oninput="updateSize('title', this.value)">
+                <input type="range" id="input-title" min="14" max="32" value="20" oninput="updateSize('title', this.value)">
             </div>
 
             <div class="setting-item">
                 <label>본문 크기 (<span id="text-val">14</span>px)</label>
-                <input type="range" min="10" max="20" value="14" oninput="updateSize('text', this.value)">
+                <input type="range" id="input-text" min="10" max="22" value="14" oninput="updateSize('text', this.value)">
             </div>
         </div>
     </div>
 
     <script>
-        // 아이콘 초기화
         lucide.createIcons();
 
+        // 말씀 데이터
         const bibleData = [
-            { 
-                text: "여호와는 나의 목자시니 내게 부족함이 없으리로다", 
-                ref: "시편 23편 1절",
-                image: "https://images.unsplash.com/photo-1564314020584-493ec1b9fdb6?q=80&w=1200&auto=format&fit=crop"
-            },
-            { 
-                text: "두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라", 
-                ref: "이사야 41장 10절",
-                image: "https://images.unsplash.com/photo-1535615615570-3b839f4359be?q=80&w=1200&auto=format&fit=crop"
-            },
-            { 
-                text: "너의 하나님 여호와가 너의 가운데에 계시니 그는 구원을 베푸실 전능자이시라 그가 너로 말미암아 기쁨을 이기지 못하시며 너를 잠잠히 사랑하시며 너로 말미암아 즐거이 부르며 기뻐하시리라 하리라", 
-                ref: "스바냐 3장 17절",
-                image: "https://images.unsplash.com/photo-1558979142-19e920d27587?q=80&w=1200&auto=format&fit=crop"
-            },
-            { 
-                text: "사랑하는 자여 네 영혼이 잘됨 같이 네가 범사에 잘되고 강건하기를 내가 간구하노라", 
-                ref: "요한삼서 1장 2절",
-                image: "https://images.unsplash.com/photo-1544911845-1f34a3eb46b1?q=80&w=1200&auto=format&fit=crop"
-            }
+            { text: "여호와는 나의 목자시니 내게 부족함이 없으리로다", ref: "시편 23편 1절", image: "https://images.unsplash.com/photo-1564314020584-493ec1b9fdb6?q=80&w=1200" },
+            { text: "두려워하지 말라 내가 너와 함께 함이라 놀라지 말라 나는 네 하나님이 됨이라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라", ref: "이사야 41장 10절", image: "https://images.unsplash.com/photo-1535615615570-3b839f4359be?q=80&w=1200" },
+            { text: "너의 하나님 여호와가 너의 가운데에 계시니 그는 구원을 베푸실 전능자이시라 그가 너로 말미암아 기쁨을 이기지 못하시며 너를 잠잠히 사랑하시며 너로 말미암아 즐거이 부르며 기뻐하시리라 하리라", ref: "스바냐 3장 17절", image: "https://images.unsplash.com/photo-1558979142-19e920d27587?q=80&w=1200" },
+            { text: "사랑하는 자여 네 영혼이 잘됨 같이 네가 범사에 잘되고 강건하기를 내가 간구하노라", ref: "요한삼서 1장 2절", image: "https://images.unsplash.com/photo-1544911845-1f34a3eb46b1?q=80&w=1200" }
         ];
+
+        // 기본 설정값 객체
+        let config = {
+            font: 'serif',
+            titleSize: 20,
+            textSize: 14
+        };
+
+        // 1. 설정 저장하기
+        function saveConfig() {
+            localStorage.setItem('notion-widget-config', JSON.stringify(config));
+        }
+
+        // 2. 설정 불러오기
+        function loadConfig() {
+            const saved = localStorage.getItem('notion-widget-config');
+            if (saved) {
+                config = JSON.parse(saved);
+                // 화면 UI 업데이트
+                updateFont(config.font, false);
+                updateSize('title', config.titleSize, false);
+                updateSize('text', config.textSize, false);
+                // 슬라이더 위치 맞추기
+                document.getElementById('input-title').value = config.titleSize;
+                document.getElementById('input-text').value = config.textSize;
+            }
+        }
 
         let isShuffling = false;
 
@@ -190,8 +193,8 @@
             const content = document.getElementById('content-area');
             const bg = document.getElementById('bg-image');
             
-            icon.classList.add('rotating'); // 회전 시작
-            content.style.opacity = 0; // 서서히 어둡게
+            icon.classList.add('rotating');
+            content.style.opacity = 0;
             bg.style.opacity = 0;
 
             setTimeout(() => {
@@ -220,7 +223,7 @@
             document.getElementById('ref').innerText = selected.ref;
 
             setTimeout(() => {
-                bg.style.opacity = 1; // 서서히 밝게
+                bg.style.opacity = 1;
                 content.style.opacity = 1;
                 icon.classList.remove('rotating');
                 isShuffling = false;
@@ -232,19 +235,28 @@
             panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        function setFont(type) {
+        function updateFont(type, shouldSave = true) {
+            config.font = type;
             const content = document.getElementById('content-area');
             content.className = (type === 'serif') ? 'font-serif' : 'font-sans';
             document.getElementById('btn-serif').className = (type === 'serif') ? 'active' : '';
             document.getElementById('btn-sans').className = (type === 'sans') ? 'active' : '';
+            if (shouldSave) saveConfig();
         }
 
-        function updateSize(type, val) {
+        function updateSize(type, val, shouldSave = true) {
+            if (type === 'title') config.titleSize = val;
+            else config.textSize = val;
+
             document.documentElement.style.setProperty(`--${type}-size`, val + 'px');
             document.getElementById(`${type}-val`).innerText = val;
+            if (shouldSave) saveConfig();
         }
 
-        window.onload = applyFinal;
+        window.onload = () => {
+            loadConfig(); // 저장된 설정 먼저 불러오기
+            applyFinal(); // 첫 말씀 띄우기
+        };
     </script>
 </body>
 </html>
