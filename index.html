@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>말씀 위젯 - 구글 시트 연동</title>
+    <title>✝️ 랜덤 말씀-구글 시트 연동</title>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -162,7 +162,7 @@
             try {
                 // 주소에 이미 물음표가 있는지 확인하여 자동으로 처리
                 const urlConnector = SHEET_CSV_URL.includes('?') ? '&' : '?';
-                const response = await fetch(SHEET_CSV_URL + urlConnector + "t=" + Date.now());
+                const response = await fetch(SHEET_CSV_URL);
                 const data = await response.text();
                 
                 // CSV 파싱 (엑셀 데이터 읽기)
